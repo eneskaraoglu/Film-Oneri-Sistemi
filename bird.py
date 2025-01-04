@@ -18,7 +18,9 @@ BLUE = (0, 0, 255)
 PIPE_COLORS = {
     1: (144, 238, 144),  # Açık yeşil
     2: (34, 139, 34),    # Orta yeşil
-    3: (0, 100, 0)       # Koyu yeşil
+    3: (0, 100, 0),      # Koyu yeşil
+    4: (0, 80, 0),       # Daha koyu yeşil
+    5: (0, 60, 0)        # En koyu yeşil
 }
 RED = (255, 0, 0)
 SKY_BLUE = (135, 206, 235)
@@ -37,7 +39,13 @@ total_pipes_spawned = 0  # Toplam oluşturulan boru sayısı
 
 # Engel parametreleri
 pipe_width = 50
-pipe_gaps = {1: 400, 2: 350, 3: 300}  # Her seviye için farklı boşluk mesafeleri
+pipe_gaps = {
+    1: 400,  # En kolay seviye
+    2: 350,  # Biraz daha zor
+    3: 300,  # Orta zorluk
+    4: 250,  # Zor
+    5: 200   # En zor seviye
+}  # Her seviye için farklı boşluk mesafeleri
 pipe_x = WIDTH
 pipe_height = random.randint(150, 400)
 pipe_list = []
@@ -134,7 +142,7 @@ while running:
             score += 1
             
             # Seviye kontrolü
-            if pipes_passed >= PIPES_PER_LEVEL and level < 3:
+            if pipes_passed >= PIPES_PER_LEVEL and level < 5:  # 5 seviyeye kadar çıkabilir
                 level += 1
                 pipes_passed = 0
                 total_pipes_spawned = 0
