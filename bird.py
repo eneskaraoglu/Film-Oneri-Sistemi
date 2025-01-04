@@ -11,6 +11,13 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Flappy Bird")
 
+# Kuş görsellerini yükle
+bird_image = pygame.image.load("assets/sultan_papagani.png")
+bird_image = pygame.transform.scale(bird_image, (50, 50))  # Görseli boyutlandır
+
+bird_image2 = pygame.image.load("assets/sultan_papagani2.png")
+bird_image2 = pygame.transform.scale(bird_image2, (50, 50))  # İkinci görseli boyutlandır
+
 # Renkler
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
@@ -149,7 +156,8 @@ while running:
                 start_pipe_spawn()  # Yeni seviyede zamanlayıcıyı başlat
 
         # Çarpışma kontrolü
-        bird_rect = pygame.Rect(bird_x - 20, bird_y - 20, 40, 40)
+        bird_rect = pygame.Rect(bird_x - 25, bird_y - 25, 50, 50)
+
         if check_collision(pipe_list, bird_rect):
             game_active = False
             stop_pipe_spawn()  # Oyun bittiğinde zamanlayıcıyı durdur
@@ -158,8 +166,12 @@ while running:
     screen.fill(SKY_BLUE)
     
     if game_active:
-        # Kuş
-        pygame.draw.circle(screen, BLUE, (bird_x, int(bird_y)), 20)
+        # Kuş - Zıplama durumuna göre farklı görsel kullan
+        if velocity < 0:  # Yukarı doğru hareket (zıplama)
+            screen.blit(bird_image2, (bird_x - 25, bird_y - 25))
+        else:  # Aşağı doğru hareket (düşme)
+            screen.blit(bird_image, (bird_x - 25, bird_y - 25))
+        
         # Engeller
         draw_pipes(pipe_list)
         # Skor ve Seviye
