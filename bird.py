@@ -14,7 +14,12 @@ pygame.display.set_caption("Flappy Bird")
 # Renkler
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
+# Her seviye için farklı yeşil tonları (açıktan koyuya)
+PIPE_COLORS = {
+    1: (144, 238, 144),  # Açık yeşil
+    2: (34, 139, 34),    # Orta yeşil
+    3: (0, 100, 0)       # Koyu yeşil
+}
 RED = (255, 0, 0)
 SKY_BLUE = (135, 206, 235)
 
@@ -27,7 +32,8 @@ jump = -10
 # Oyun seviyesi ve zorluk
 level = 1
 pipes_passed = 0
-PIPES_PER_LEVEL = 3
+PIPES_PER_LEVEL = 3  # Her seviye için 3 çubuk
+total_pipes_spawned = 0  # Toplam oluşturulan boru sayısı
 
 # Engel parametreleri
 pipe_width = 50
@@ -36,7 +42,13 @@ pipe_x = WIDTH
 pipe_height = random.randint(150, 400)
 pipe_list = []
 SPAWNPIPE = pygame.USEREVENT
-pygame.time.set_timer(SPAWNPIPE, 2000)  # Borular arası mesafeyi artırmak için süreyi artırdık
+pygame.time.set_timer(SPAWNPIPE, 0)  # Başlangıçta zamanlayıcıyı kapalı tut
+
+def start_pipe_spawn():
+    pygame.time.set_timer(SPAWNPIPE, 3000)  # Zamanlayıcıyı başlat
+
+def stop_pipe_spawn():
+    pygame.time.set_timer(SPAWNPIPE, 0)  # Zamanlayıcıyı durdur
 
 # Puan
 score = 0
@@ -61,8 +73,9 @@ def move_pipes(pipes):
     return [pipe for pipe in pipes if pipe.x > -pipe_width]
 
 def draw_pipes(pipes):
+    current_color = PIPE_COLORS[level]  # Mevcut seviyeye göre renk seç
     for pipe in pipes:
-        pygame.draw.rect(screen, GREEN, pipe)
+        pygame.draw.rect(screen, current_color, pipe)
 
 def check_collision(pipes, bird_rect):
     for pipe in pipes:
@@ -72,9 +85,22 @@ def check_collision(pipes, bird_rect):
         return True
     return False
 
+def reset_game():
+    global game_active, bird_y, velocity, score, level, pipes_passed, total_pipes_spawned
+    game_active = True
+    pipe_list.clear()
+    bird_y = 300
+    velocity = 0
+    score = 0
+    level = 1
+    pipes_passed = 0
+    total_pipes_spawned = 0
+    start_pipe_spawn()  # Oyun başladığında zamanlayıcıyı başlat
+
 # Oyun döngüsü
 running = True
 game_active = True
+start_pipe_spawn()  # İlk başlangıçta zamanlayıcıyı başlat
 
 while running:
     for event in pygame.event.get():
@@ -85,15 +111,13 @@ while running:
             if event.key == pygame.K_SPACE and game_active:
                 velocity = jump
             if event.key == pygame.K_SPACE and not game_active:
-                game_active = True
-                pipe_list.clear()
-                bird_y = 300
-                velocity = 0
-                score = 0
-                level = 1
-                pipes_passed = 0
+                reset_game()
         if event.type == SPAWNPIPE and game_active:
-            pipe_list.extend(create_pipe())
+            if total_pipes_spawned < PIPES_PER_LEVEL and len(pipe_list) < PIPES_PER_LEVEL:
+                pipe_list.extend(create_pipe())
+                total_pipes_spawned += 1
+                if total_pipes_spawned >= PIPES_PER_LEVEL:
+                    stop_pipe_spawn()  # Yeterli boru oluşturulduğunda zamanlayıcıyı durdur
 
     if game_active:
         # Fizik
@@ -113,11 +137,14 @@ while running:
             if pipes_passed >= PIPES_PER_LEVEL and level < 3:
                 level += 1
                 pipes_passed = 0
+                total_pipes_spawned = 0
+                start_pipe_spawn()  # Yeni seviyede zamanlayıcıyı başlat
 
         # Çarpışma kontrolü
         bird_rect = pygame.Rect(bird_x - 20, bird_y - 20, 40, 40)
         if check_collision(pipe_list, bird_rect):
             game_active = False
+            stop_pipe_spawn()  # Oyun bittiğinde zamanlayıcıyı durdur
 
     # Ekranı temizle ve çizim yap
     screen.fill(SKY_BLUE)
@@ -130,8 +157,10 @@ while running:
         # Skor ve Seviye
         score_text = font.render(f'Skor: {score}', True, WHITE)
         level_text = font.render(f'Seviye: {level}', True, WHITE)
+        pipes_text = font.render(f'Borular: {pipes_passed}/{PIPES_PER_LEVEL}', True, WHITE)
         screen.blit(score_text, (10, 10))
         screen.blit(level_text, (10, 50))
+        screen.blit(pipes_text, (10, 90))
     else:
         # Oyun bitiş ekranı
         game_over_text = font.render('OYUN BİTTİ - TEKRAR BAŞLAMAK İÇİN BOŞLUK', True, WHITE)
